@@ -25,11 +25,10 @@ class VoiceEngine:
         self._last_tts_done: float = 0.0
 
         # Subscribe to know exactly when TTS finishes so we don't transcribe ourselves
-        bus.subscribe(SystemEvents.STATE_CHANGE, self._on_state_change)
+        bus.subscribe(SystemEvents.TTS_FINISHED, self._on_tts_finished)
 
-    def _on_state_change(self, state: str):
-        if (state or "").upper() == "IDLE":
-            self._last_tts_done = time.time()
+    def _on_tts_finished(self, _payload=None):
+        self._last_tts_done = time.time()
 
     # ------------------------------------------------------------------ #
     #  Toggle API                                                          #

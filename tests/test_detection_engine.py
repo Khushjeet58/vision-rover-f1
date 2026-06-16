@@ -85,6 +85,25 @@ def test_detection_engine_adds_opencv_face_detections():
     assert result[0].bbox.h == 14
 
 
+def test_detection_engine_keeps_face_and_person_detections_together_when_available():
+    cfg = RoverConfig("ws://cam", "ws://servo", "ws://motor", face_lock_enabled=True)
+    backend = FakeBackend([make_detection("person", 12)])
+    engine = DetectionEngine(cfg, backend=backend)
+
+    class FakeCascade:
+        def detectMultiScale(self, *_args, **_kwargs):
+            return [(3, 4, 12, 14)]
+
+    engine._face_cascade = FakeCascade()
+    engine._face_cascades = [FakeCascade()]
+    engine._face_ready = True
+
+    result = engine.detect(np.zeros((8, 8, 3), dtype=np.uint8))
+
+    labels = sorted(item.label for item in result)
+    assert labels == ["face", "person"]
+
+
 def test_detection_engine_ignores_empty_frame_source():
     cfg = RoverConfig("ws://cam", "ws://servo", "ws://motor")
     backend = FakeBackend([make_detection("person", 12)])

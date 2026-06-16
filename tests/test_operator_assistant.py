@@ -54,3 +54,23 @@ def test_operator_assistant_builds_runtime_context():
     assert "mode=MANUAL" in context
     assert "detections=person:1" in context
     assert "last_command=F" in context
+
+
+def test_operator_assistant_answers_command_help():
+    assistant = OperatorAssistant()
+
+    response = assistant.try_answer("what commands can I say", make_snapshot())
+
+    assert response is not None
+    assert "move forward" in response.lower()
+    assert "follow me" in response.lower()
+
+
+def test_operator_assistant_answers_project_question():
+    assistant = OperatorAssistant()
+
+    response = assistant.try_answer("what is this project and how does it work", make_snapshot())
+
+    assert response is not None
+    assert "esp32-cam rover" in response.lower()
+    assert "vision" in response.lower() or "v.i.s.i.o.n." in response.lower()

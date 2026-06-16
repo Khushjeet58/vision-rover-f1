@@ -1,6 +1,13 @@
 from pathlib import Path
 
-from config import PROJECT_ROOT, RoverConfig, build_rover_config
+from config import (
+    DEFAULT_CAMERA_STREAM_URL,
+    DEFAULT_MOTOR_URL,
+    DEFAULT_SERVO_URL,
+    PROJECT_ROOT,
+    RoverConfig,
+    build_rover_config,
+)
 
 
 DUMMY_CONFIG = RoverConfig(
@@ -19,7 +26,7 @@ def test_required_fields_exist():
     assert cfg.detector_confidence == 0.30
     assert cfg.detector_track_classes == (0,)
     assert cfg.camera_flip_code == -1
-    assert cfg.servo_step == 4.0
+    assert cfg.servo_step == 6.0
     assert cfg.servo_send_hz > 0
     assert cfg.servo_motion_smoothing_alpha > 0
     assert cfg.servo_easing_min > 0
@@ -82,16 +89,16 @@ def test_url_fields_are_strings():
 def test_build_rover_config_defaults_to_shared_udp_dev_board_endpoint():
     cfg = build_rover_config("rtx5060")
 
-    assert cfg.servo_url == "udp://192.168.137.101:4210"
-    assert cfg.motor_url == "udp://192.168.137.101:4210"
+    assert cfg.servo_url == DEFAULT_SERVO_URL
+    assert cfg.motor_url == DEFAULT_MOTOR_URL
     assert cfg.servo_url == cfg.motor_url
 
 
 def test_build_rover_config_uses_separate_default_camera_ip():
     cfg = build_rover_config("rtx5060")
 
-    assert cfg.vision_stream_url == "http://192.168.137.100:81/stream"
-    assert cfg.servo_url == "udp://192.168.137.101:4210"
+    assert cfg.vision_stream_url == DEFAULT_CAMERA_STREAM_URL
+    assert cfg.servo_url == DEFAULT_SERVO_URL
 
 
 def test_legacy_yolo_properties_map_to_detector_fields():
@@ -139,7 +146,8 @@ def test_build_rover_config_uses_rtx5060_profile_defaults():
     assert cfg.detector_device == "cuda:0"
     assert cfg.detector_confidence == 0.32
     assert cfg.detector_tracking_confidence == 0.36
-    assert cfg.servo_send_hz == 26
+    assert cfg.servo_step == 6.0
+    assert cfg.servo_send_hz == 36
     assert cfg.target_acquisition_frames == 1
     assert cfg.tracking_deadband_px == 20
     assert cfg.tracking_moving_average_window == 3

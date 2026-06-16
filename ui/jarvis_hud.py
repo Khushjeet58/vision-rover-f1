@@ -400,6 +400,8 @@ class JarvisHUD(QMainWindow):
 
         self.mic_btn = QPushButton("MIC OFF")
         self.mic_btn.setCheckable(True)
+        self.mic_btn.setChecked(True)
+        self.mic_btn.setText("MIC LIVE")
         self.mic_btn.clicked.connect(self._toggle_mic)
         layout.addWidget(self.mic_btn)
 

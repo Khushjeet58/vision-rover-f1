@@ -117,7 +117,7 @@ class JarvisSystem:
         self.knowledge_base = KnowledgeBase(rover_config)
         self.ai_engine = OllamaAIEngine(self.knowledge_base)
         self.scene_perception = ScenePerceptionService()
-        self.operator_assistant = OperatorAssistant()
+        self.operator_assistant = OperatorAssistant(self.knowledge_base)
         self.tts = TTSEngine()
         self.audio_service = AudioService(rover_config)
         self.rover_vision_app = RoverVisionApp(rover_config, self.control_arbiter)
@@ -134,6 +134,8 @@ class JarvisSystem:
         self._last_spoken_at = 0.0
         bus.subscribe(SystemEvents.DETECTIONS_UPDATED, self._handle_detections_updated)
         bus.subscribe(SystemEvents.TRACK_TARGET_CHANGED, self._handle_track_target_changed)
+        bus.subscribe(SystemEvents.VOICE_TEXT_CAPTURED, self._handle_voice_text_captured)
+        self.audio_service.toggle_listening(True)
 
         threading.Thread(
             target=self.rover_vision_app.run,
@@ -144,6 +146,12 @@ class JarvisSystem:
     def stop(self):
         self.audio_service.stop()
         self.rover_vision_app.stop()
+
+    def _handle_voice_text_captured(self, transcript: str) -> None:
+        text = (transcript or "").strip()
+        if not text:
+            return
+        self.handle_request(text)
 
     def handle_request(self, user_input: str, is_raw_command: bool = False):
         if not user_input:
@@ -393,8 +401,14 @@ class JarvisSystem:
         try:
             self.tts.speak(
                 line,
-                on_start=lambda: bus.emit(SystemEvents.STATE_CHANGE, "SPEAKING"),
-                on_done=lambda: bus.emit(SystemEvents.STATE_CHANGE, "IDLE"),
+                on_start=lambda: (
+                    bus.emit(SystemEvents.TTS_STARTED, line),
+                    bus.emit(SystemEvents.STATE_CHANGE, "SPEAKING"),
+                ),
+                on_done=lambda: (
+                    bus.emit(SystemEvents.TTS_FINISHED, line),
+                    bus.emit(SystemEvents.STATE_CHANGE, "IDLE"),
+                ),
                 interrupt=interrupt,
             )
             self._last_spoken_line = line

@@ -63,7 +63,7 @@ class AudioService:
             min_separation_seconds=config.clap_min_separation_seconds,
         )
         self._whisper_model = None
-        bus.subscribe(SystemEvents.STATE_CHANGE, self._on_state_change)
+        bus.subscribe(SystemEvents.TTS_FINISHED, self._on_tts_finished)
         bus.subscribe(SystemEvents.MIC_TOGGLE, self.toggle_listening)
 
     def set_launch_callback(self, callback: Callable[[], None]) -> None:
@@ -220,9 +220,8 @@ class AudioService:
             bus.emit(SystemEvents.LOG_MESSAGE, f"[AudioService] Transcription failed: {exc}")
             return ""
 
-    def _on_state_change(self, state: str) -> None:
-        if (state or "").upper() == "IDLE":
-            self._last_tts_done = time.time()
+    def _on_tts_finished(self, _payload=None) -> None:
+        self._last_tts_done = time.time()
 
     def _in_tts_cooldown(self) -> bool:
         return (time.time() - self._last_tts_done) < self._TTS_COOLDOWN

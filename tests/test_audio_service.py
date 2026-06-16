@@ -1,4 +1,5 @@
 from config import rover_config
+from core.event_bus import SystemEvents, bus
 from modules.audio_service import AudioService, ClapDetector
 
 
@@ -52,3 +53,15 @@ def test_microphone_status_message_does_not_claim_double_clap_when_wake_disabled
     service._wake_enabled = False
 
     assert service._microphone_status_message() == "[AudioService] Microphone stream active. Listening for voice commands."
+
+
+def test_audio_service_only_starts_tts_cooldown_after_real_speaking_cycle():
+    service = AudioService(rover_config)
+    original = service._last_tts_done
+
+    bus.emit(SystemEvents.STATE_CHANGE, "IDLE")
+    assert service._last_tts_done == original
+
+    bus.emit(SystemEvents.TTS_FINISHED, "hello")
+
+    assert service._last_tts_done >= original

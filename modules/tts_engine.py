@@ -145,27 +145,29 @@ class TTSEngine:
 
             try:
                 print(f"[TTS/Piper] Generating audio for: {text}")
-                audio_buffers: list[bytes] = []
+                stream = None
                 for chunk in voice.synthesize(text):
                     if cls._cancel_current:
                         break
                     samples = np.asarray(chunk.audio_float_array, dtype=np.float32)
-                    if samples.size:
-                        audio_buffers.append(samples.tobytes())
-
-                if not cls._cancel_current and audio_buffers:
-                    audio_blob = b"".join(audio_buffers)
-                    stream = pa.open(
-                        format=pyaudio.paFloat32,
-                        channels=1,
-                        rate=voice.config.sample_rate,
-                        output=True,
-                    )
+                    if not samples.size:
+                        continue
+                    if stream is None:
+                        stream = pa.open(
+                            format=pyaudio.paFloat32,
+                            channels=1,
+                            rate=voice.config.sample_rate,
+                            output=True,
+                        )
+                    if cls._cancel_current:
+                        break
+                    stream.write(samples.tobytes())
+                if stream is not None:
                     try:
-                        if not cls._cancel_current:
-                            stream.write(audio_blob)
+                        stream.stop_stream()
                     finally:
                         stream.close()
+                if not cls._cancel_current:
                     print(f"[TTS/Piper] Finished playing: {text}")
             except Exception as e:
                 print(f"[TTS/Piper] Error: {e}")

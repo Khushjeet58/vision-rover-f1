@@ -45,8 +45,8 @@ def test_send_immediately_suppresses_errors_and_returns_false():
 
 def test_send_immediately_writes_udp_datagrams_for_legacy_packets():
     controller = ServoController(
-        "udp://192.168.137.101:4210",
-        RoverConfig("ws://cam", "udp://192.168.137.101:4210", "udp://192.168.137.101:4210"),
+        "udp://192.168.0.101:4210",
+        RoverConfig("ws://cam", "udp://192.168.0.101:4210", "udp://192.168.0.101:4210"),
     )
     udp_socket = DummyUdpSocket()
     controller._udp_socket = udp_socket
@@ -56,8 +56,8 @@ def test_send_immediately_writes_udp_datagrams_for_legacy_packets():
 
     assert ok is True
     assert udp_socket.sent == [
-        ("Pan,120", ("192.168.137.101", 4210)),
-        ("Tilt,75", ("192.168.137.101", 4210)),
+        ("Pan,120", ("192.168.0.101", 4210)),
+        ("Tilt,75", ("192.168.0.101", 4210)),
     ]
 
 

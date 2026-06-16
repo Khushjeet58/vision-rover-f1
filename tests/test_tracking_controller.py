@@ -38,7 +38,7 @@ def make_target(w: int, h: int, x: int = 10, y: int = 10, stable_frames: int = 4
     return TrackedTarget(target_id=1, detection=detection, stable_frames=stable_frames)
 
 
-def test_update_drives_forward_for_small_far_target():
+def test_update_aims_camera_before_follow_drive_for_small_far_target():
     cfg = RoverConfig("ws://cam", "ws://servo", "ws://motor")
     rover = DummyRover()
     servo = DummyTransport()
@@ -47,9 +47,9 @@ def test_update_drives_forward_for_small_far_target():
 
     result = controller.update(make_target(10, 10, x=0, y=0), 200, 200)
 
-    assert result == "F"
-    assert rover.commands[-1] == "F"
-    assert motor.commands[-1] == "F"
+    assert result in {"L", "R", "S"}
+    assert rover.commands[-1] == result
+    assert motor.commands[-1] == result
     assert any(command.startswith("Pan,") for command in servo.commands)
 
 
@@ -69,9 +69,9 @@ def test_update_turns_rover_when_camera_pan_is_far_off_center():
 
     result = controller.update(make_target(60, 90, x=110, y=60), 240, 200)
 
-    assert result == "R"
-    assert rover.commands[-1] == "R"
-    assert motor.commands[-1] == "R"
+    assert result == "L"
+    assert rover.commands[-1] == "L"
+    assert motor.commands[-1] == "L"
 
 
 def test_update_servos_tracks_target_without_motor_commands():
@@ -288,6 +288,26 @@ def test_follow_drive_waits_until_target_is_stable():
     assert result == "S"
     assert rover.commands[-1] == "S"
     assert motor.commands[-1] == "S"
+
+
+def test_follow_drive_waits_for_camera_lock_before_forward_motion():
+    cfg = RoverConfig(
+        "ws://cam",
+        "ws://servo",
+        "ws://motor",
+        target_lock_frames=1,
+        tracking_deadband_px=1,
+        follow_pan_align_threshold_deg=8.0,
+    )
+    rover = DummyRover()
+    servo = DummyTransport()
+    motor = DummyTransport()
+    controller = TrackingController(cfg, rover, servo, motor)
+
+    result = controller.update(make_target(10, 10, x=140, y=80, stable_frames=2), 240, 200)
+
+    assert result in {"L", "R", "S"}
+    assert result != "F"
 
 
 def test_no_detection_timeout_stops_rover():

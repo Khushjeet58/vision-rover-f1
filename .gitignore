@@ -3,5 +3,19 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .env
+local_config/
 .venv/
 *.pt
+*.log
+coverage/
+htmlcov/
+dist/
+build/
+outputs/
+runs/
+artifacts/
+*.ckpt
+*.safetensors
+
+# Optional local workspace metadata
+.kiro/

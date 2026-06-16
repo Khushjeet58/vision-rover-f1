@@ -40,3 +40,15 @@ def test_manual_servo_arrows_support_inverted_physical_mount():
     assert manual_servo_delta("__PAN_RIGHT__", 5, **kwargs) == (-5, 0)
     assert manual_servo_delta("__TILT_UP__", 5, **kwargs) == (0, 5)
     assert manual_servo_delta("__TILT_DOWN__", 5, **kwargs) == (0, -5)
+
+
+def test_voice_capture_routes_text_into_request_handler():
+    from main import JarvisSystem
+
+    controller = JarvisSystem.__new__(JarvisSystem)
+    seen = []
+    controller.handle_request = lambda text, is_raw_command=False: seen.append((text, is_raw_command))
+
+    controller._handle_voice_text_captured("follow me")
+
+    assert seen == [("follow me", False)]

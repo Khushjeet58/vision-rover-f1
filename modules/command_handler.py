@@ -42,16 +42,21 @@ class CommandHandler:
         "halt": "S",
         "follow the person ahead of you": "FOLLOW",
         "follow person": "FOLLOW",
+        "follow me": "FOLLOW",
+        "start following me": "FOLLOW",
         "autonomous mode": "AUTO",
         "drive autonomously": "AUTO",
         "drive yourself": "AUTO",
         "start patrol": "AUTO",
         "manual mode": "MANUAL",
+        "go manual": "MANUAL",
         "stop following": "MANUAL",
         "stop autonomous mode": "MANUAL",
         "what's in front of you": "INSPECT",
         "what is in front of you": "INSPECT",
+        "inspect the scene": "INSPECT",
         "emergency stop": "E_STOP",
+        "stop everything": "E_STOP",
     }
 
     @staticmethod
@@ -78,13 +83,19 @@ class CommandHandler:
 
         if "follow" in text and "person" in text:
             return "FOLLOW"
+        if "follow me" in text:
+            return "FOLLOW"
         if "autonomous" in text or "autopilot" in text or "drive yourself" in text or "patrol" in text:
             return "AUTO"
         if "manual" in text or "stop following" in text:
             return "MANUAL"
         if "front" in text and ("what" in text or "scan" in text):
             return "INSPECT"
+        if "inspect" in text and "scene" in text:
+            return "INSPECT"
         if "emergency" in text and "stop" in text:
+            return "E_STOP"
+        if "stop everything" in text:
             return "E_STOP"
         if "forward" in text or "ahead" in text:
             return "F"

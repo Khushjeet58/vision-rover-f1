@@ -49,7 +49,7 @@ def iter_latest_jpegs(url: str, *, read_size: int = 8192, timeout: float = 5.0):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Low-latency ESP32-CAM MJPEG viewer.")
-    parser.add_argument("--url", default="http://192.168.137.100:81/stream")
+    parser.add_argument("--url", default="http://192.168.0.100:81/stream")
     parser.add_argument("--scale", type=float, default=2.0)
     args = parser.parse_args()
 

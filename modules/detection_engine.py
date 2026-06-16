@@ -213,11 +213,14 @@ class DetectionEngine:
     def detect(self, frame: np.ndarray) -> list[Detection]:
         if not isinstance(frame, np.ndarray) or frame.size == 0:
             return []
+        faces: list[Detection] = []
         if bool(getattr(self._config, "face_lock_enabled", False)):
             faces = self._detect_faces(frame)
-            if faces or self._face_only_mode():
+            if self._face_only_mode():
                 return self._deduplicate_detections(faces)
         detections = self._backend.detect(frame) if self._backend.ready() else []
+        if faces:
+            detections = [*faces, *detections]
         return self._deduplicate_detections(detections)
 
     def select_primary(self, detections: list[Detection], label: str | None = None) -> Detection | None:

@@ -52,6 +52,10 @@ class RoverVisionApp:
         self._detection_frame: Optional[np.ndarray] = None
         self._detection_frame_size: tuple[int, int] = (0, 0)
         self._detection_scale: tuple[float, float] = (1.0, 1.0)
+        self._detection_pending_frame: Optional[np.ndarray] = None
+        self._detection_pending_frame_size: tuple[int, int] = (0, 0)
+        self._detection_pending_scale: tuple[float, float] = (1.0, 1.0)
+        self._detection_pending_mode = ControlMode.IDLE
         self._detection_event = threading.Event()
         self._detection_load_lock = threading.Lock()
         self._detection_state_lock = threading.Lock()
@@ -283,6 +287,7 @@ class RoverVisionApp:
             self._latest_detections = []
             self._latest_target = None
             self._detection_frame = None
+            self._detection_pending_frame = None
             self._detection_busy = False
         with self._frame_handoff_lock:
             self._latest_camera_frame = None
@@ -329,6 +334,12 @@ class RoverVisionApp:
             scale_y = frame.shape[0] / target_height
 
         with self._detection_state_lock:
+            if self._detection_busy:
+                self._detection_pending_frame = detect_frame
+                self._detection_pending_frame_size = (frame.shape[1], frame.shape[0])
+                self._detection_pending_scale = (scale_x, scale_y)
+                self._detection_pending_mode = mode
+                return
             self._detection_frame = detect_frame
             self._detection_frame_size = (frame.shape[1], frame.shape[0])
             self._detection_scale = (scale_x, scale_y)
@@ -394,7 +405,19 @@ class RoverVisionApp:
                 with self._detection_state_lock:
                     self._latest_detections = display_detections
                     self._latest_target = display_target
-                    self._detection_busy = False
+                    if self._detection_pending_frame is not None:
+                        self._detection_frame = self._detection_pending_frame
+                        self._detection_frame_size = self._detection_pending_frame_size
+                        self._detection_scale = self._detection_pending_scale
+                        self._latest_detection_mode = self._detection_pending_mode
+                        self._detection_pending_frame = None
+                        self._detection_pending_frame_size = (0, 0)
+                        self._detection_pending_scale = (1.0, 1.0)
+                        self._detection_pending_mode = ControlMode.IDLE
+                        self._last_detection_submit = time.monotonic()
+                        self._detection_event.set()
+                    else:
+                        self._detection_busy = False
 
     def _apply_detection_actions(
         self,

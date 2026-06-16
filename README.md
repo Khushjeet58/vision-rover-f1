@@ -1,31 +1,57 @@
-# vision-project
+# Vision Rover Final
 
-Jarvis rover PC brain for ESP32-CAM video, YOLO person tracking, servo pan/tilt, motor control, voice, and the V.I.S.I.O.N HUD.
+Vision Rover Final is the PC-side autonomy stack for a student-built ESP32 rover. It combines live ESP32-CAM video, YOLO-based human tracking, pan/tilt servo control, rover drive control, voice interaction, and a custom V.I.S.I.O.N operator HUD.
 
-## Pull And Run On Another Windows Device
+## Highlights
+
+- Real-time camera streaming with latest-frame-first handling for low-latency tracking.
+- Face-prioritized person lock and follow behavior.
+- Pan/tilt servo aiming with smoothing, deadband, Kalman prediction, and PID control.
+- Manual, follow, and autonomous operating modes.
+- Local voice commands, local TTS, and local Ollama-backed project assistant responses.
+- Modular Python architecture with tests.
+
+## Tech Stack
+
+- Python 3.11
+- PyQt5
+- OpenCV
+- Ultralytics YOLO
+- PyTorch with CUDA support
+- Faster-Whisper
+- Piper / offline TTS
+- Ollama for local LLM responses
+
+## Run On Windows
 
 ```powershell
-git clone https://github.com/Geekystreker/vision-project.git
-cd vision-project
-git checkout finalv2
+git clone https://github.com/GeekyStreker/vision-rover-final.git
+cd vision-rover-final
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements-gpu.txt
 .\.venv\Scripts\python.exe launcher.py
 ```
 
-Use `requirements-gpu.txt` for the RTX/CUDA setup. The runtime model weights such as `yolo26n.pt`, `yolov8n.pt`, and other generated `.pt` files are intentionally not committed; Ultralytics will download/load them locally as needed.
+## Local Configuration
 
-## Current Network Defaults
+This public repo keeps machine-specific IPs and runtime settings out of tracked source.
 
-- Camera stream: `http://192.168.137.100:81/stream`
-- Driver node websocket: `ws://192.168.137.101:80/Jarvis`
-- Performance profile: `rtx5060`
+1. Create `local_config/.env`.
+2. Start from `local_config_example/.env.example`.
+3. Replace the placeholder rover and camera values with your own.
 
-You can override these without editing code by setting:
+You can also override with shell environment variables:
 
 ```powershell
-$env:ROVER_CAMERA_IP="192.168.137.100"
-$env:ROVER_ESP32_IP="192.168.137.101"
+$env:ROVER_CAMERA_IP="192.168.0.100"
+$env:ROVER_ESP32_IP="192.168.0.101"
 $env:VISION_PERF_PROFILE="rtx5060"
+$env:OLLAMA_ENDPOINT="http://localhost:11434/api/generate"
 ```
+
+## Notes
+
+- Local virtual environments, caches, and local config are intentionally excluded from Git.
+- YOLO `.pt` weights are intentionally ignored and can be downloaded locally as needed.
+- The offline Piper voice model under `models/` remains in the project so the demo works immediately after clone.

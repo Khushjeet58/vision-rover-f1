@@ -469,9 +469,11 @@ class TrackingController:
         pan_bias = self._pan_alignment_bias()
         threshold = max(1.0, float(self._config.follow_pan_align_threshold_deg))
         if pan_bias >= threshold:
-            return "R"
-        if pan_bias <= -threshold:
             return "L"
+        if pan_bias <= -threshold:
+            return "R"
+        if not self._state.target_locked:
+            return "S"
         fraction = target.bbox.area / (frame_w * frame_h)
         if fraction < self._config.bbox_min_fraction:
             return "F"

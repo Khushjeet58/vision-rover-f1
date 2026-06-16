@@ -14,15 +14,22 @@ except ImportError:
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+LOCAL_CONFIG_DIR = PROJECT_ROOT / "local_config"
+LOCAL_ENV_FILE = LOCAL_CONFIG_DIR / ".env"
+
+try:
+    load_dotenv(LOCAL_ENV_FILE)
+except NameError:
+    pass
+
 DEFAULT_KNOWLEDGE_PATHS = (
     "README.md",
-    ".kiro/specs",
     "config.py",
     "modules",
 )
 DEFAULT_TRACKER_CONFIG = "trackers/rover_botsort.yaml"
-DEFAULT_ESP32_IP = os.getenv("ROVER_ESP32_IP", "192.168.137.101")
-DEFAULT_CAMERA_IP = os.getenv("ROVER_CAMERA_IP", "192.168.137.100")
+DEFAULT_ESP32_IP = os.getenv("ROVER_ESP32_IP", "192.168.0.101")
+DEFAULT_CAMERA_IP = os.getenv("ROVER_CAMERA_IP", "192.168.0.100")
 DEFAULT_CAMERA_STREAM_URL = os.getenv("ROVER_CAMERA_STREAM_URL", f"http://{DEFAULT_CAMERA_IP}:81/stream")
 DEFAULT_JARVIS_WS_URL = f"ws://{DEFAULT_ESP32_IP}:80/Jarvis"
 DEFAULT_DEV_BOARD_UDP_PORT = int(os.getenv("ROVER_DEV_BOARD_UDP_PORT", "4210"))
@@ -39,9 +46,9 @@ DEFAULT_PERFORMANCE_PROFILE = (os.getenv("VISION_PERF_PROFILE", "rtx5060") or "r
 class Config:
     API_TIMEOUT = 20
 
-    OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
-    OLLAMA_MODEL = "qwen3:1.7b"
-    OLLAMA_VLM_MODEL = "qwen2.5vl:3b"
+    OLLAMA_ENDPOINT = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:1.7b")
+    OLLAMA_VLM_MODEL = os.getenv("OLLAMA_VLM_MODEL", "qwen2.5vl:3b")
 
     SINGLE_INSTANCE_SERVER = "VISIONControlPanel"
     LAUNCHER_APP_NAME = "V.I.S.I.O.N Launcher"
@@ -66,10 +73,12 @@ class RoverConfig:
     camera_disconnect_timeout: float = 1.0
     camera_initial_frame_timeout: float = 8.0
     camera_reconnect_timeout: float = 12.0
+    camera_http_read_size: int = 16_384
+    camera_enable_ffmpeg_fallback: bool = False
     camera_flip_code: int | None = -1
 
     # Manual pan / tilt
-    servo_step: float = 4.0
+    servo_step: float = 6.0
     servo_center_angle: int = 90
     servo_min_angle: int = 10
     servo_max_angle: int = 170
@@ -79,15 +88,15 @@ class RoverConfig:
     servo_tilt_max_angle: int = 155
     servo_manual_pan_direction: int = -1
     servo_manual_tilt_direction: int = 1
-    servo_tracking_pan_direction: int = -1
+    servo_tracking_pan_direction: int = 1
     servo_tracking_tilt_direction: int = 1
-    servo_send_hz: int = 24
-    servo_max_step_deg: float = 3.0
-    servo_max_speed_deg_per_sec: float = 72.0
-    servo_min_delta_deg: float = 0.55
-    servo_motion_smoothing_alpha: float = 0.34
-    servo_easing_min: float = 0.20
-    servo_easing_exponent: float = 1.45
+    servo_send_hz: int = 30
+    servo_max_step_deg: float = 4.0
+    servo_max_speed_deg_per_sec: float = 96.0
+    servo_min_delta_deg: float = 0.40
+    servo_motion_smoothing_alpha: float = 0.42
+    servo_easing_min: float = 0.24
+    servo_easing_exponent: float = 1.28
     motor_drive_speed: int = 170
     motor_turn_speed: int = 150
     motor_send_hz: int = 20
@@ -137,7 +146,7 @@ class RoverConfig:
     kalman_max_prediction_frames: int = 30
     kalman_process_noise: float = 35.0
     kalman_measurement_noise: float = 90.0
-    servo_hardware_latency_seconds: float = 0.10
+    servo_hardware_latency_seconds: float = 0.08
 
     # Autonomous navigation
     autonomous_stop_fraction: float = 0.26
@@ -244,13 +253,14 @@ PERFORMANCE_PROFILES: dict[str, dict[str, int | float | str]] = {
         "detector_confidence": 0.32,
         "detector_tracking_confidence": 0.36,
         "detector_tracking_iou": 0.60,
-        "servo_send_hz": 26,
-        "servo_max_step_deg": 2.8,
-        "servo_max_speed_deg_per_sec": 68.0,
-        "servo_min_delta_deg": 0.65,
-        "servo_motion_smoothing_alpha": 0.30,
-        "servo_easing_min": 0.18,
-        "servo_easing_exponent": 1.55,
+        "servo_step": 6.0,
+        "servo_send_hz": 36,
+        "servo_max_step_deg": 4.8,
+        "servo_max_speed_deg_per_sec": 128.0,
+        "servo_min_delta_deg": 0.32,
+        "servo_motion_smoothing_alpha": 0.48,
+        "servo_easing_min": 0.26,
+        "servo_easing_exponent": 1.18,
         "target_acquisition_frames": 1,
         "target_rebind_frames": 1,
         "target_box_smoothing_alpha": 0.16,
@@ -265,7 +275,7 @@ PERFORMANCE_PROFILES: dict[str, dict[str, int | float | str]] = {
         "tracking_moving_average_window": 3,
         "tracking_loss_bridge_seconds": 0.08,
         "tracking_loss_bridge_velocity_scale": 0.5,
-        "servo_hardware_latency_seconds": 0.12,
+        "servo_hardware_latency_seconds": 0.08,
         "kalman_max_prediction_frames": 30,
         "kalman_process_noise": 18.0,
         "kalman_measurement_noise": 130.0,

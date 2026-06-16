@@ -222,10 +222,10 @@ class VisionStream:
 
         self._set_state(ConnectionState.CONNECTING)
         transports: list[tuple[str, Callable[[], bool]]] = [("raw-http", self._run_mjpeg_raw_http_once)]
-        if cv2 is not None:
-            transports.append(("ffmpeg", lambda: self._run_mjpeg_ffmpeg_once(cv2)))
         if self._snapshot_candidates:
             transports.append(("snapshot", self._run_snapshot_fallbacks_once))
+        if cv2 is not None and bool(getattr(self._config, "camera_enable_ffmpeg_fallback", False)):
+            transports.append(("ffmpeg", lambda: self._run_mjpeg_ffmpeg_once(cv2)))
 
         try:
             while self._running:
@@ -282,8 +282,9 @@ class VisionStream:
             "Pragma": "no-cache",
             "Connection": "keep-alive",
             "User-Agent": "VISION/1.0",
+            "Accept": "multipart/x-mixed-replace,image/jpeg,*/*",
         }
-        read_size = 4096
+        read_size = max(2048, int(getattr(self._config, "camera_http_read_size", 16_384)))
         timeout = max(1.0, self._config.ws_recv_timeout)
         had_frames = False
 
@@ -301,7 +302,7 @@ class VisionStream:
 
             buffer = bytearray()
             while self._running:
-                chunk = stream.read(read_size)
+                chunk = self._read_http_chunk(stream, read_size)
                 if not chunk:
                     raise ConnectionError("camera stream ended")
                 self._consume_mjpeg_chunk(chunk, buffer)
@@ -320,6 +321,17 @@ class VisionStream:
                 self._http_stream = None
             self._on_close(None, None, None)
         return had_frames
+
+    @staticmethod
+    def _read_http_chunk(stream: HTTPResponse, read_size: int) -> bytes:
+        reader = getattr(stream, "read1", None)
+        if callable(reader):
+            return reader(read_size)
+        fp = getattr(stream, "fp", None)
+        reader = getattr(fp, "read1", None)
+        if callable(reader):
+            return reader(read_size)
+        return stream.read(read_size)
 
     def _run_snapshot_fallbacks_once(self) -> bool:
         for candidate in self._snapshot_candidates:

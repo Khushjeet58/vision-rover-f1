@@ -71,8 +71,8 @@ def test_motor_controller_translates_turn_and_stop_commands_to_legacy_csv():
 
 def test_motor_controller_sends_udp_datagrams_for_legacy_packets():
     controller = MotorController(
-        "udp://192.168.137.101:4210",
-        RoverConfig("ws://cam", "udp://192.168.137.101:4210", "udp://192.168.137.101:4210"),
+        "udp://192.168.0.101:4210",
+        RoverConfig("ws://cam", "udp://192.168.0.101:4210", "udp://192.168.0.101:4210"),
     )
     udp_socket = DummyUdpSocket()
     controller._udp_socket = udp_socket
@@ -82,8 +82,8 @@ def test_motor_controller_sends_udp_datagrams_for_legacy_packets():
 
     assert ok is True
     assert udp_socket.sent == [
-        ("L,170", ("192.168.137.101", 4210)),
-        ("R,170", ("192.168.137.101", 4210)),
+        ("L,170", ("192.168.0.101", 4210)),
+        ("R,170", ("192.168.0.101", 4210)),
     ]
 
 

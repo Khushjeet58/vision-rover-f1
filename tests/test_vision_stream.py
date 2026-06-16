@@ -170,6 +170,27 @@ def test_mjpeg_transport_prefers_raw_http_before_ffmpeg(monkeypatch):
     assert calls == ["raw-http"]
 
 
+def test_http_chunk_reader_prefers_read1_when_available():
+    class DummyStream:
+        def __init__(self):
+            self.calls = []
+
+        def read1(self, size):
+            self.calls.append(("read1", size))
+            return b"chunk"
+
+        def read(self, size):
+            self.calls.append(("read", size))
+            return b"fallback"
+
+    stream = DummyStream()
+
+    chunk = VisionStream._read_http_chunk(stream, 8192)
+
+    assert chunk == b"chunk"
+    assert stream.calls == [("read1", 8192)]
+
+
 def test_mjpeg_parser_discards_old_complete_frames_from_same_chunk(monkeypatch):
     cfg = RoverConfig("http://cam/stream", "ws://servo", "ws://motor")
     stream = VisionStream("http://cam/stream", cfg)
