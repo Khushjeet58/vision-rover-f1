@@ -25,7 +25,7 @@ Vision Rover Final is the PC-side autonomy stack for a student-built ESP32 rover
 ## Run On Windows
 
 ```powershell
-git clone https://github.com/GeekyStreker/vision-rover-final.git
+git clone https://github.com/Khushjeet58/vision-rover-final.git
 cd vision-rover-final
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
