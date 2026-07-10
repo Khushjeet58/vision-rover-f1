@@ -1,4 +1,4 @@
-# Vision Rover Final
+# Vision Rover
 
 Vision Rover Final is the PC-side autonomy stack for a student-built ESP32 rover. It combines live ESP32-CAM video, YOLO-based human tracking, pan/tilt servo control, rover drive control, voice interaction, and a custom V.I.S.I.O.N operator HUD.
 
